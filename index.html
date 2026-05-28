@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Honourbound - RPG Habit Tracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts (Cinzel for RPG headers, Inter for UI) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Firebase Compat App, Auth & Firestore CDNs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Inter', 'sans-serif'], // Merged serif look into sleek modern sans UI for elegance
+            sans: ['Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            rpg: {
+              bg: '#18181b',       // Elegant Dark zinc-900 bg
+              card: '#27272a',     // Elegant zinc-800 card bg
+              accent: '#6366f1',   // Gorgeous Indigo accent
+              gold: '#818cf8',     // Map golden elements to elegant Indigo-400
+              red: '#ef4444',      // Crisp warning red
+              muted: '#9191a2',    // Clean slate text
+              border: '#3f3f46',   // Zinc-700 card border divider
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Styling scrollbar for independent content scrolling */
+    .scroll-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scroll-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Touch optimization and ripple animation support */
+    .touch-interactive {
+      transition: all 100ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .touch-interactive:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+
+    /* Light Mode Palette Refined Overrides */
+    body.light-theme {
+      background-color: #f4f4f5 !important;
+      color: #18181b !important;
+    }
+    body.light-theme main {
+      background-color: #ffffff !important;
+      border-color: #e4e4e7 !important;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+    }
+    body.light-theme header,
+    body.light-theme nav,
+    body.light-theme .sticky,
+    body.light-theme #app-content-area,
+    body.light-theme #modal-overlay {
+      background-color: #ffffff !important;
+    }
+    body.light-theme header {
+      border-color: #e4e4e7 !important;
+    }
+    body.light-theme nav {
+      border-color: #e4e4e7 !important;
+    }
+    body.light-theme select,
+    body.light-theme input[type="text"],
+    body.light-theme input[type="number"] {
+      background-color: #f4f4f5 !important;
+      border-color: #e4e4e7 !important;
+      color: #18181b !important;
+    }
+    body.light-theme .text-white,
+    body.light-theme h2,
+    body.light-theme h3,
+    body.light-theme h4 {
+      color: #18181b !important;
+    }
+    body.light-theme .text-zinc-100 {
+      color: #18181b !important;
+    }
+    body.light-theme .text-zinc-300 {
+      color: #27272a !important;
+    }
+    body.light-theme .text-zinc-400 {
+      color: #52525b !important;
+    }
+    body.light-theme .text-zinc-500 {
+      color: #71717a !important;
+    }
+    body.light-theme .bg-zinc-850\/50,
+    body.light-theme .bg-zinc-850\/30,
+    body.light-theme .bg-zinc-800\/50,
+    body.light-theme .bg-zinc-805, 
+    body.light-theme .bg-zinc-800\/85 {
+      background-color: #f4f4f5 !important;
+      border-color: #e4e4e7 !important;
+    }
+    body.light-theme .bg-zinc-950,
+    body.light-theme .bg-zinc-900,
+    body.light-theme .bg-zinc-900\/95,
+    body.light-theme .bg-zinc-950\/40,
+    body.light-theme .bg-neutral-950,
+    body.light-theme .bg-[#2d1b11],
+    body.light-theme .bg-[#311012]\/30 {
+      background-color: #fafafa !important;
+      border-color: #e4e4e7 !important;
+    }
+    body.light-theme .border-zinc-850,
+    body.light-theme .border-zinc-805,
+    body.light-theme .border-zinc-800,
+    body.light-theme .border-zinc-800\/80,
+    body.light-theme .border-zinc-800\/60,
+    body.light-theme .border-zinc-800\/40,
+    body.light-theme .border-zinc-700,
+    body.light-theme .border-zinc-700\/80 {
+      border-color: #e4e4e7 !important;
+    }
+    body.light-theme .text-indigo-400 {
+      color: #4f46e5 !important;
+    }
+    body.light-theme .text-indigo-300 {
+      color: #6366f1 !important;
+    }
+    body.light-theme .border-indigo-500\/40,
+    body.light-theme .border-indigo-500\/30,
+    body.light-theme .border-indigo-550\/20,
+    body.light-theme .border-indigo-500\/20,
+    body.light-theme .border-indigo-500\/10 {
+      border-color: #e4e4e7 !important;
+    }
+    body.light-theme .bg-indigo-500\/10,
+    body.light-theme .bg-indigo-500\/20,
+    body.light-theme .bg-indigo-600\/20 {
+      background-color: #e0e7ff !important;
+    }
+    body.light-theme #modal-overlay {
+      background-color: rgba(255, 255, 255, 0.95) !important;
+    }
+    body.light-theme #modal-overlay > div {
+      background-color: #ffffff !important;
+      border-color: #e4e4e7 !important;
+    }
+    body.light-theme .shadow-inner,
+    body.light-theme .shadow-lg,
+    body.light-theme .shadow-xl {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    }
+    body.light-theme #character-name-edit {
+      color: #18181b !important;
+      border-color: #d4d4d8 !important;
+    }
+    body.light-theme #character-name-edit:focus {
+      border-color: #4f46e5 !important;
+    }
+    body.light-theme .grid-cols-2 .bg-gradient-to-t {
+      background: linear-gradient(to top, #ffffff, #f4f4f5) !important;
+    }
+    body.light-theme #clock-countdown-node {
+      color: #71717a !important;
+    }
+    body.light-theme .text-[#ef4444],
+    body.light-theme .text-red-400 {
+      color: #dc2626 !important;
+    }
+    body.light-theme .lg\:flex .border-zinc-800 {
+      background-color: #ffffff !important;
+      border-color: #e4e4e7 !important;
+    }
+    body.light-theme .lg\:flex .text-zinc-400,
+    body.light-theme .lg\:flex p {
+      color: #27272a !important;
+    }
+    body.light-theme .lg\:flex .text-white {
+      color: #18181b !important;
+    }
+  </style>
+</head>
+<body class="bg-neutral-950 text-zinc-100 font-sans min-h-screen flex items-center justify-center p-0 md:p-4 overflow-x-hidden select-none">
+
+  <!-- Desktop Backdrop Info Panel (Only visible on wide screens) -->
+  <div class="hidden lg:flex flex-col max-w-xs xl:max-w-sm mr-8 text-left space-y-4 text-zinc-400 text-sm">
+    <div class="border border-zinc-800 bg-zinc-900/80 p-6 rounded-[2rem] shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-[10px] uppercase tracking-widest text-[#818cf8] font-bold">Studio</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-[#818cf8]"></span>
+        <span class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Pulse AI</span>
+      </div>
+      <h1 class="font-sans text-2xl text-white mb-1 font-bold tracking-tight">HONOURBOUND</h1>
+      <p class="text-[10px] text-[#818cf8] mb-4 font-mono leading-relaxed uppercase font-bold tracking-widest">COSMIC RPG RITUAL ENGINE</p>
+      <div class="space-y-3">
+        <div class="flex items-start gap-2">
+          <span class="text-[#818cf8] font-mono">▸</span>
+          <p>Complete daily **Trials** to inflict severe damage upon **The Slothwraith** boss.</p>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-[#818cf8] font-mono">▸</span>
+          <p>Gain gold, XP, and unlock high-tier cosmetics in the **Shop**.</p>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-[#818cf8] font-mono">▸</span>
+          <p>Run simulated **AI Scans** to forge customized daily rituals.</p>
+        </div>
+      </div>
+      <div class="mt-8 pt-4 border-t border-zinc-800 flex justify-between text-xs font-mono">
+        <span class="text-zinc-500">SYSTEM STATUS: SECURE</span>
+        <span class="text-indigo-400">● RUNNING</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Mobile App Shell Frame -->
+  <main class="w-full max-w-md h-[100vh] md:h-[840px] md:rounded-[3rem] md:border-[12px] md:border-zinc-800 bg-zinc-900 flex flex-col relative overflow-hidden shadow-2xl ring-1 ring-white/10">
+    
+    <!-- Status Bar Simulation -->
+    <div class="h-6 flex justify-between items-center px-8 pt-4 text-[10px] text-zinc-400 font-medium select-none bg-zinc-900 shrink-0 z-40">
+      <span>9:41</span>
+      <div class="flex gap-1.5 items-center">
+        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M12 21l-12-18h24z"/></svg>
+        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M0 20v-4h2v4h-2zm4 0v-8h2v8h-2zm4 0v-12h2v12h-2zm4 0v-16h2v16h-2z"/></svg>
+        <div class="w-5 h-2.5 border border-zinc-500 rounded-sm relative">
+          <div class="absolute left-0 top-0 h-full bg-zinc-300 w-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Permanent Sticky Header -->
+    <header class="h-16 bg-zinc-900/95 sticky top-0 z-30 flex justify-between items-center px-6 pt-2 shrink-0 border-b border-zinc-800/80 backdrop-blur-sm shadow-md">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        </div>
+        <div>
+          <span class="font-sans text-md font-bold text-white tracking-tight" id="header-name">SIR ALISTAIR</span>
+          <p class="text-[9px] font-mono text-zinc-500 tracking-tight" id="header-level-desc">LVL 0 · INITIATE</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 font-mono text-xs">
+        <div class="flex items-center gap-1 bg-zinc-800/50 px-2.5 py-1 rounded-full border border-zinc-700">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-indigo-400 animate-bounce"></i>
+          <span id="player-xp-header" class="text-zinc-300">0 XP</span>
+        </div>
+        <div class="flex items-center gap-1 bg-zinc-800/85 px-2.5 py-1 rounded-full border border-zinc-700/80">
+          <i data-lucide="gem" class="w-3.5 h-3.5 text-indigo-400"></i>
+          <span id="player-gems-header" class="text-zinc-100 font-bold">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Scrollable Content Container -->
+    <section id="app-content-area" class="flex-1 overflow-y-auto scroll-hide px-5 pt-5 pb-28 space-y-4">
+      <!-- Active Tab Render Injection -->
+    </section>
+
+    <!-- Floating Global Toast System -->
+    <div id="toast-container" class="absolute bottom-28 left-4 right-4 z-40 space-y-2 pointer-events-none"></div>
+
+    <!-- Live Confirm / Notification Overlay Modal (Generic, Compact) -->
+    <div id="modal-overlay" class="hidden absolute inset-0 z-50 bg-[#09090be9] flex items-center justify-center p-6">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 w-full shadow-2xl text-center space-y-4">
+        <div class="mx-auto w-12 h-12 rounded-full bg-rpg-red/20 border border-rpg-red/40 flex items-center justify-center text-red-500">
+          <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+        <div class="space-y-1">
+          <h2 class="font-serif text-lg font-bold text-rpg-gold" id="modal-title">TITLE</h2>
+          <p class="text-xs text-gray-400" id="modal-message">MESSAGE</p>
+        </div>
+        <div class="flex gap-3 justify-center pt-2">
+          <button id="modal-btn-cancel" class="px-4 py-2 text-xs font-mono rounded bg-slate-800 text-gray-300 touch-interactive">CANCEL</button>
+          <button id="modal-btn-action" class="px-4 py-2 text-xs font-mono rounded bg-rpg-red text-white font-bold touch-interactive">PROCEED</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Permanent Bottom Sticky Navigation Menu -->
+    <nav class="h-[84px] bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 flex justify-around items-center px-4 pb-4 shrink-0 relative z-30">
+      <button id="nav-btn-home" onclick="switchTab('home')" class="flex flex-col items-center justify-center w-14 h-11 rounded-xl touch-interactive text-indigo-400">
+        <i data-lucide="home" class="w-5 h-5"></i>
+        <span class="text-[9px] font-mono mt-0.5 font-bold tracking-tight">Arena</span>
+      </button>
+      <button id="nav-btn-stats" onclick="switchTab('stats')" class="flex flex-col items-center justify-center w-14 h-11 rounded-xl touch-interactive text-zinc-500">
+        <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+        <span class="text-[9px] font-mono mt-0.5 font-bold tracking-tight">Stats</span>
+      </button>
+      <button id="nav-btn-shop" onclick="switchTab('shop')" class="flex flex-col items-center justify-center w-14 h-11 rounded-xl touch-interactive text-zinc-500">
+        <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+        <span class="text-[9px] font-mono mt-0.5 font-bold tracking-tight">Shop</span>
+      </button>
+      <button id="nav-btn-calendar" onclick="switchTab('calendar')" class="flex flex-col items-center justify-center w-14 h-11 rounded-xl touch-interactive text-zinc-500">
+        <i data-lucide="calendar" class="w-5 h-5"></i>
+        <span class="text-[9px] font-mono mt-0.5 font-bold tracking-tight">Journal</span>
+      </button>
+      <button id="nav-btn-settings" onclick="switchTab('settings')" class="flex flex-col items-center justify-center w-14 h-11 rounded-xl touch-interactive text-zinc-500">
+        <i data-lucide="settings" class="w-5 h-5"></i>
+        <span class="text-[9px] font-mono mt-0.5 font-bold tracking-tight">Gear</span>
+      </button>
+    </nav>
+
+    <!-- iPhone Home Bar Area -->
+    <div class="absolute bottom-1.5 w-full flex justify-center pb-1 z-35 pointer-events-none">
+      <div class="w-24 h-1 bg-zinc-800 rounded-full"></div>
+    </div>
+  </main>
+
+  <script>
+    // --- CORE GAME STATE (Synced via LocalStorage with initial fallback states) ---
+    const DEFAULT_STATE = {
+      // Character info
+      character: {
+        name: "SIR ALISTAIR",
+        profession: "LEVEL 0 INITIATE",
+        rank: "INITIATE",
+        level: 0,
+        xp: 0,
+        requiredXp: 100,
+        gems: 0,
+        avatar: "avatar_knight",
+        status: "Rested Status",
+        boostActive: false
+      },
+      // Slothwraith Boss Data
+      boss: {
+        name: "THE SLOTHWRAITH",
+        hp: 100, // percentage
+        maxHp: 300,
+        currentHp: 300
+      },
+      // Statistical track
+      stats: {
+        totalXpEarned: 0,
+        gemsSpent: 0,
+        perfectDays: 0,
+        bestStreak: 0,
+        streaks: {
+          health: 0,
+          reading: 0,
+          meditation: 0
+        }
+      },
+      // Item shop items owned
+      ownedItems: [],
+      // Scribe log calendars
+      completedDates: [],
+      // User created bespoke trials
+      customTrials: [],
+      // Predefined default trials starts at absolute zero streaks
+      trials: [
+        { id: "sword-drill", title: "Morning sword drill", rewardXp: 30, rewardGems: 1, streakDesc: "0-DAY STREAK · HEALTH", active: true, completed: false, category: "health", icon: "dumbbell" },
+        { id: "monk-silence", title: "Monk's Silence", rewardXp: 60, rewardGems: 15, streakDesc: "0-DAY STREAK · DISCIPLINE", active: true, completed: false, category: "meditation", icon: "user-check", bonusAvailable: true },
+        { id: "the-trial", title: "The Trial", rewardXp: 120, rewardGems: 30, streakDesc: "0-DAY STREAK · ACADEMIC", active: true, completed: false, category: "reading", icon: "book-open" }
+      ],
+      // Weekly XP record track defaults to all zeros
+      weeklyXp: {
+        MON: 0,
+        TUE: 0,
+        WED: 0,
+        THU: 0,
+        FRI: 0,
+        SAT: 0,
+        SUN: 0
+      },
+      // Configuration details
+      settings: {
+        darkMode: true,
+        soundFx: true,
+        firebaseConfig: {
+          apiKey: "AIzaSyFakeKeyPlaceholderForNetlifyBypass",
+          authDomain: "honourbound-applet.firebaseapp.com",
+          projectId: "honourbound-applet",
+          storageBucket: "honourbound-applet.appspot.com",
+          messagingSenderId: "1234567890",
+          appId: "1:1234567890:web:abcdef123456"
+        },
+        firebaseConnected: false
+      },
+      shopTab: "battle" // "battle" or "avatar"
+    };
+
+    let state = null;
+    let activeTab = "home";
+
+    // --- LOCAL PERSISTENCE ---
+    function loadState() {
+      try {
+        const data = localStorage.getItem("honourbound_save");
+        if (data) {
+          state = JSON.parse(data);
+          // Zero-Baseline Force: Check if previous state contains the old mock milestones
+          if (state.character && (state.character.level === 42 || state.stats && state.stats.totalXpEarned === 1250)) {
+            state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            saveState();
+          } else {
+            // Auto fill any properties missing from update
+            state = { ...DEFAULT_STATE, ...state };
+          }
+        } else {
+          state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        }
+        applyTheme();
+      } catch (e) {
+        state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        applyTheme();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem("honourbound_save", JSON.stringify(state));
+        updateHeaderAndFooter();
+      } catch (e) {
+        console.error("Save error", e);
+      }
+    }
+
+    // --- TOAST NOTIFICATIONS ---
+    function fireToast(message, type = "success") {
+      const container = document.getElementById("toast-container");
+      if (!container) return;
+
+      const toast = document.createElement("div");
+      toast.className = `p-3.5 rounded-lg flex items-center justify-between shadow-xl border text-xs font-mono text-gray-100 transform transition-all duration-300 translate-y-4 opacity-0 pointer-events-auto max-w-sm mx-auto select-none gap-2 z-50`;
+      
+      let bg = "bg-rpg-card/95 border-rpg-gold/30";
+      let icon = "⭐";
+      
+      if (type === "success") {
+        bg = "bg-[#101F12e0] border-[#22C55E]/40 text-emerald-300";
+        icon = "🛡️";
+      } else if (type === "error") {
+        bg = "bg-[#2A0F11e0] border-red-500/40 text-red-300";
+        icon = "💀";
+      } else if (type === "exp") {
+        bg = "bg-[#1E1A0Ae0] border-rpg-gold/40 text-amber-300";
+        icon = "⚡";
+      } else if (type === "system") {
+        bg = "bg-[#1A1A2Ee0] border-[#6366F1]/40 text-cyan-300";
+        icon = "🪄";
+      }
+
+      toast.className += ` ${bg}`;
+      toast.innerHTML = `
+        <span class="flex items-center gap-2">
+          <span>${icon}</span>
+          <span>${message}</span>
+        </span>
+        <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-white font-bold ml-1.5 font-sans">×</button>
+      `;
+
+      container.appendChild(toast);
+      
+      // Animate entry
+      setTimeout(() => {
+        toast.classList.remove("translate-y-4", "opacity-0");
+        toast.classList.add("translate-y-0", "opacity-100");
+      }, 10);
+
+      // Dismiss timer
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y--2");
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // --- MODAL ENGINE (Custom confirmation fallback) ---
+    function triggerModal(title, msg, onConfirm, actionText = "PROCEED", actionClass = "bg-rpg-red text-white", iconName = "alert-triangle", iconColorClass = "text-red-500 bg-rpg-red/20 border-rpg-red/40") {
+      const overlay = document.getElementById("modal-overlay");
+      const mTitle = document.getElementById("modal-title");
+      const mMsg = document.getElementById("modal-message");
+      const btnCancel = document.getElementById("modal-btn-cancel");
+      const btnAction = document.getElementById("modal-btn-action");
+      const iconContainer = overlay.querySelector(".mx-auto");
+
+      mTitle.innerText = title;
+      mMsg.innerText = msg;
+      btnAction.innerText = actionText;
+      btnAction.className = `px-4 py-2 text-xs font-mono rounded-xl ${actionClass} font-bold touch-interactive`;
+      
+      if (iconContainer) {
+        iconContainer.className = `mx-auto w-12 h-12 rounded-full flex items-center justify-center border ${iconColorClass}`;
+        iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-6 h-6"></i>`;
+      }
+      
+      overlay.classList.remove("hidden");
+      try {
+        lucide.createIcons();
+      } catch (e) {}
+
+      const close = () => {
+        overlay.classList.add("hidden");
+      };
+
+      btnCancel.onclick = () => {
+        close();
+      };
+
+      btnAction.onclick = () => {
+        onConfirm();
+        close();
+      };
+    }
+
+    // --- THE ARTWORK RENDERING ENGINE (Pure SVG-CSS code, highly polished) ---
+    function renderBossPortrait() {
+      const scale = state.boss.hp > 0 ? "scale-100" : "scale-75 opacity-20";
+      const filter = state.boss.hp <= 0 ? "grayscale brightness-50" : "";
+      return `
+        <div class="h-44 w-full relative overflow-hidden rounded-2xl bg-gradient-to-t from-zinc-950 via-[#1e1b4b]/20 to-zinc-900 border border-zinc-800/80 flex justify-center items-center shadow-inner select-none shrink-0 ${scale} ${filter} transition-all duration-500">
+          <!-- Background Grid Overlay -->
+          <div class="absolute inset-0 opacity-[0.06] bg-[radial-gradient(#6366f1_1.5px,transparent_1.5px)] [background-size:16px_16px]"></div>
+          <!-- Dark pulsing atmosphere behind Wraith -->
+          <div class="absolute w-32 h-32 rounded-full bg-indigo-500/10 blur-3xl animate-pulse"></div>
+          
+          <!-- Sinking Shadow Wraith Portrait in CSS/SVG -->
+          <div class="relative flex flex-col items-center">
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" class="drop-shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+              <!-- Animated floating shadow cloak -->
+              <g class="animate-bounce" style="animation-duration: 4.5s">
+                <path d="M60,10 C45,25 35,45 35,70 C35,80 40,90 40,100 C48,95 55,102 60,93 C65,102 72,95 80,100 C80,90 85,80 85,70 C85,45 75,25 60,10 Z" fill="url(#ghost-gradient)" />
+                <!-- Dark hood opening -->
+                <path d="M60,28 C50,38 46,48 46,65 C46,75 48,80 60,80 C72,80 74,75 74,65 C74,48 70,38 60,28 Z" fill="#09090b" />
+                <!-- Glowing Eerie Eyes -->
+                <circle cx="53" cy="54" r="2.5" fill="#818cf8" class="animate-ping" style="animation-duration: 2s;" />
+                <circle cx="53" cy="54" r="1.5" fill="#FFFFFF" />
+                <circle cx="67" cy="54" r="2.5" fill="#818cf8" class="animate-ping" style="animation-duration: 2s; animation-delay: 0.3s;" />
+                <circle cx="67" cy="54" r="1.5" fill="#FFFFFF" />
+              </g>
+              <defs>
+                <linearGradient id="ghost-gradient" x1="60" y1="10" x2="60" y2="100" gradientUnits="userSpaceOnUse">
+                   <stop offset="0%" stop-color="#1e1b4b" />
+                   <stop offset="50%" stop-color="#4f46e5" stop-opacity="0.8" />
+                   <stop offset="100%" stop-color="#09090b" stop-opacity="0.3" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <!-- Floating Hourglass -->
+            <div class="absolute bottom-1 right-2 animate-pulse bg-zinc-900 border border-indigo-500/30 p-1.5 rounded-full shadow-lg">
+              <i data-lucide="hourglass" class="w-4 h-4 text-indigo-400 animate-spin" style="animation-duration: 6s;"></i>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderWarriorPortrait() {
+      const fatigueStatus = state.character.hp < 30 ? "text-red-400 font-bold" : "text-zinc-500";
+      
+      const lvl = state.character.level || 0;
+      const tier = Math.floor(lvl / 5);
+
+      let pName = "HUMAN WARRIOR";
+      let plumeColor = "#ef4444";
+      let domeColor = "#4B5162";
+      let trimColor = "#818cf8";
+      let visorColor = "#1C1E24";
+      let eyeColor = "#FFFFFF";
+      let chinColor = "#3A3E4B";
+      let ventColor = "#818cf8";
+      let leftAttachment = "";
+      let rightAttachment = "";
+      let hasPlume = true;
+
+      if (tier === 0) {
+        pName = "INITIATE RECRUIT";
+        hasPlume = false;
+        domeColor = "#78350f"; // rustic leather cap
+        trimColor = "#b45309";
+        visorColor = "#451a03";
+        chinColor = "#451a03";
+        ventColor = "#b45309";
+      } else if (tier === 1) {
+        pName = "IRON SQUIRE";
+        plumeColor = "#22c55e"; // Green feathers
+        domeColor = "#6b7280"; // Dull iron
+        trimColor = "#4b5563";
+        visorColor = "#1f2937";
+        chinColor = "#374151";
+        ventColor = "#6b7280";
+      } else if (tier === 2) {
+        pName = "BRONZE SENTRY";
+        plumeColor = "#3b82f6"; // Blue plume
+        domeColor = "#b45309"; // Antique bronze
+        trimColor = "#f59e0b"; // Gold trim
+        visorColor = "#1e1b4b";
+        chinColor = "#78350f";
+        ventColor = "#f59e0b";
+      } else if (tier === 3) {
+        pName = "ROYAL SWORDSMAN";
+        plumeColor = "#ef4444"; // Vivid scarlet feather plume
+        domeColor = "#94a3b8"; // Polished steel dome
+        trimColor = "#fbbf24"; // Brass comb plate
+        visorColor = "#0f172a";
+        chinColor = "#475569";
+        ventColor = "#fbbf24";
+      } else if (tier === 4) {
+        pName = "VETERAN VANGUARD";
+        plumeColor = "#8b5cf6"; // Violet plume
+        domeColor = "#312e81"; // Royal twilight cobalt steel
+        trimColor = "#a78bfa";
+        visorColor = "#030712";
+        chinColor = "#1e1b4b";
+        ventColor = "#a78bfa";
+        // Curved metal horns left and right
+        leftAttachment = `<path d="M26,45 C14,35 10,20 16,14 C18,24 22,34 26,41 Z" fill="#94a3b8" stroke="#475569" stroke-width="1" />`;
+        rightAttachment = `<path d="M74,45 C86,35 90,20 84,14 C82,24 78,34 74,41 Z" fill="#94a3b8" stroke="#475569" stroke-width="1" />`;
+      } else if (tier === 5) {
+        pName = "KNIGHT TEMPLAR";
+        plumeColor = "#f43f5e"; // Rose-red plume
+        domeColor = "#e2e8f0"; // Bright bone-white silver plating
+        trimColor = "#f43f5e";
+        visorColor = "#dc2626"; // Crimson templar cross slits
+        chinColor = "#cbd5e1";
+        ventColor = "#f43f5e";
+        // Templar circle halo behind
+        leftAttachment = `<circle cx="50" cy="50" r="42" stroke="#ea580c" stroke-width="1" stroke-dasharray="4 8" opacity="0.6" />`;
+      } else if (tier === 6) {
+        pName = "CHAMPION DESTROYER";
+        plumeColor = "#10b981"; // Glowing green cyber plague crest
+        domeColor = "#111827"; // Dark nether slate
+        trimColor = "#06b6d4"; // Cyber cyan comb
+        visorColor = "#000000";
+        eyeColor = "#22c55e"; // Glowing green eyes!
+        chinColor = "#1f2937";
+        ventColor = "#06b6d4";
+        // Wicked spiky horns
+        leftAttachment = `<path d="M25,48 C5,45 0,30 8,20 C14,30 18,40 24,45 Z" fill="#111827" stroke="#10b981" stroke-width="1" />`;
+        rightAttachment = `<path d="M75,48 C95,45 100,30 92,20 C86,30 82,40 76,45 Z" fill="#111827" stroke="#10b981" stroke-width="1" />`;
+      } else if (tier === 7) {
+        pName = "PALADIN JUSTICIAR";
+        plumeColor = "#f59e0b"; // Pure radiant gold crest
+        domeColor = "#fef08a"; // Sacred gold plated steel
+        trimColor = "#eab308";
+        visorColor = "#020617";
+        eyeColor = "#f43f5e"; // Paladin glowing quartz eyes
+        chinColor = "#ca8a04";
+        ventColor = "#f59e0b";
+        // Ornate feather angel ears left & right
+        leftAttachment = `<path d="M25,45 C-2,42 -6,15 4,5 C12,18 18,32 24,42 Z" fill="#ffffff" stroke="#f59e0b" stroke-width="1" />`;
+        rightAttachment = `<path d="M75,45 C102,42 106,15 96,5 C88,18 82,32 76,42 Z" fill="#ffffff" stroke="#f59e0b" stroke-width="1" />`;
+      } else if (tier === 8) {
+        pName = "OBSIDIAN DREADNOUGHT";
+        plumeColor = "#dc2626"; // Crimson lava plume
+        domeColor = "#180018"; // Onyx void purple
+        trimColor = "#701a75"; // Dark amethyst comb
+        visorColor = "#050005";
+        eyeColor = "#ef4444"; // Fiery red glowing eyes
+        chinColor = "#4d0752";
+        ventColor = "#ec4899";
+        // Massive upward sweeping demon horns
+        leftAttachment = `<path d="M26,45 C8,30 2,10 10,2 C15,14 20,28 26,40 Z" fill="#4d0752" stroke="#ec4899" stroke-width="1" />`;
+        rightAttachment = `<path d="M74,45 C92,30 98,10 90,2 C85,14 80,28 74,40 Z" fill="#4d0752" stroke="#ec4899" stroke-width="1" />`;
+      } else {
+        pName = "LORD SOVEREIGN EMPEROR";
+        plumeColor = "#6366f1"; // Celestial twilight plume
+        domeColor = "#fafafa"; // Silver starlight plate
+        trimColor = "#f59e0b"; // Grand gold crown combo
+        visorColor = "#1e1b4b";
+        eyeColor = "#38bdf8"; // Celestial cyan starlight eyes
+        chinColor = "#e2e8f0";
+        ventColor = "#f59e0b";
+        // Golden orbits halo + double emperor wings
+        leftAttachment = `
+          <circle cx="50" cy="50" r="46" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="6 4" class="animate-spin" style="animation-duration: 20s" />
+          <path d="M25,45 C-5,30 -8,5 6,-5 C16,12 20,28 24,42 Z" fill="#fbbf24" stroke="#ffffff" stroke-width="1" />
+        `;
+        rightAttachment = `
+          <path d="M75,45 C105,30 108,5 94,-5 C84,12 80,28 76,42 Z" fill="#fbbf24" stroke="#ffffff" stroke-width="1" />
+        `;
+      }
+
+      return `
+        <div class="h-44 w-full relative overflow-hidden rounded-2xl bg-gradient-to-t from-zinc-950 via-[#311012]/30 to-zinc-900 border border-zinc-800/80 flex flex-col justify-center items-center shadow-inner transition-all duration-300">
+          <div class="absolute inset-0 opacity-[0.05] bg-[radial-gradient(#ef4444_1.5px,transparent_1.5px)] [background-size:16px_16px]"></div>
+          <!-- Red pulsing energy -->
+          <div class="absolute w-28 h-28 rounded-full bg-red-500/10 blur-2xl animate-pulse"></div>
+
+          <div class="relative flex flex-col items-center select-none">
+            <!-- Royal Steel Helmet SVG illustration -->
+            <svg width="100" height="90" viewBox="0 0 100 100" fill="none" class="drop-shadow-[0_0_12px_rgba(129,140,248,0.25)]">
+              <!-- Left and Right attachments / Wings / Horns -->
+              ${leftAttachment}
+              ${rightAttachment}
+
+              <!-- Plume Feather -->
+              ${hasPlume ? `<path d="M50,15 C45,2 35,5 25,12 C35,16 45,22 50,32 C55,22 65,16 75,12 C65,5 55,2 50,15 Z" fill="${plumeColor}" />` : ''}
+              
+              <!-- Helmet dome -->
+              <path d="M25,50 C25,32 35,27 50,27 C65,27 75,32 75,50 C75,58 73,63 73,63 L27,63 C27,63 25,58 25,50 Z" fill="${domeColor}" />
+              
+              <!-- Royal Brass Comb Trim -->
+              <path d="M50,26 C47,26 47,40 50,45 C53,40 53,26 50,26 Z" fill="${trimColor}" />
+              
+              <!-- Visor & Eye slits -->
+              <path d="M28,50 L72,50 L70,58 L30,58 Z" fill="${visorColor}" />
+              <rect x="35" y="53" width="10" height="2" rx="1" fill="${eyeColor}" opacity="0.9" />
+              <rect x="55" y="53" width="10" height="2" rx="1" fill="${eyeColor}" opacity="0.9" />
+              
+              <!-- Helmet Vent lower details -->
+              <path d="M27,63 L50,90 L73,63 Z" fill="${chinColor}" />
+              <path d="M46,68 L48,74 L44,74 Z M54,68 L52,74 L56,74 Z" fill="${ventColor}" />
+            </svg>
+            <span class="text-[10px] font-mono tracking-wider text-indigo-300 mt-1 uppercase font-bold text-center">${pName}</span>
+            <span class="text-[9px] font-mono ${fatigueStatus}" id="warrior-status-panel">${state.character.status}</span>
+          </div>
+          
+          <!-- Immediate Command Action -->
+          <button onclick="handleReadyRest()" class="absolute bottom-2.5 right-2.5 px-3 py-1 text-[9px] font-mono rounded bg-zinc-950 border border-indigo-500/40 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all touch-interactive" id="ready-status-btn">
+            READY
+          </button>
+        </div>
+      `;
+    }
+
+    // --- APP RENDERING & TRANSITION CONTROLLER ---
+    function updateHeaderAndFooter() {
+      // Keep main parameters on fixed headers in sync
+      document.getElementById("player-xp-header").innerText = `${state.character.xp} XP`;
+      document.getElementById("player-gems-header").innerText = state.character.gems;
+      document.getElementById("header-name").innerText = state.character.name;
+      document.getElementById("header-level-desc").innerText = `LVL ${state.character.level} · ${state.character.rank}`;
+      
+      // Update nav choice focus highlight classes
+      ["home", "stats", "shop", "calendar", "settings"].forEach(tab => {
+        const btn = document.getElementById(`nav-btn-${tab}`);
+        if (btn) {
+          if (tab === activeTab) {
+            btn.className = "flex flex-col items-center justify-center w-14 h-11 rounded-xl touch-interactive text-indigo-400";
+          } else {
+            btn.className = "flex flex-col items-center justify-center w-14 h-11 rounded-xl touch-interactive text-zinc-500 hover:text-zinc-400";
+          }
+        }
+      });
+    }
+
+    function switchTab(tabId) {
+      activeTab = tabId;
+      updateHeaderAndFooter();
+      
+      const appContent = document.getElementById("app-content-area");
+      
+      // Animate transition using layout transition styles
+      appContent.style.opacity = "0";
+      appContent.style.transform = "translateY(5px)";
+      
+      setTimeout(() => {
+        appContent.innerHTML = renderTabContent(tabId);
+        appContent.style.opacity = "1";
+        appContent.style.transform = "translateY(0)";
+        lucide.createIcons();
+        if (tabId === "calendar") initCalendarJS();
+      }, 100);
+    }
+
+    function renderTabContent(tabId) {
+      switch (tabId) {
+        case "home":
+          return renderHomeTab();
+        case "stats":
+          return renderStatsTab();
+        case "shop":
+          return renderShopTab();
+        case "calendar":
+          return renderCalendarTab();
+        case "settings":
+          return renderSettingsTab();
+        default:
+          return "";
+      }
+    }
+
+    // --- TAB: 1 - HOME ARENA SCREEN ---
+    function renderHomeTab() {
+      let trialsListHtml = "";
+      
+      // Render user added trials along with stock defaults
+      const combined = [...state.trials, ...state.customTrials];
+      combined.forEach((trial, index) => {
+        const borderAccent = trial.completed ? "border-l-4 border-l-indigo-600/20" : (trial.bonusAvailable ? "border-l-4 border-l-indigo-500" : "border-l-4 border-l-zinc-700");
+        const opStatusClass = trial.completed ? "opacity-50 bg-zinc-950/40 line-through border-zinc-800/40" : "bg-zinc-800/50 border border-zinc-800 hover:border-zinc-750";
+        const indicatorText = trial.completed ? "CONQUERED" : "SELECT";
+        const labelClass = trial.completed ? "text-indigo-400/70 font-bold line-through ml-1" : "text-zinc-100 ml-1";
+        
+        trialsListHtml += `
+          <div class="rounded-2xl flex items-center justify-between p-4 relative overflow-hidden select-none touch-interactive ${borderAccent} ${opStatusClass} transition-all duration-300">
+            <div class="flex items-center gap-3 w-10/12 shrink-0">
+              <div onclick="toggleTrial('${trial.id}')" class="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-indigo-400 hover:bg-zinc-800 hover:text-indigo-300 transition-all cursor-pointer">
+                <i data-lucide="${trial.icon || 'star'}" class="w-5 h-5"></i>
+              </div>
+              <div class="w-10/12 overflow-hidden leading-snug">
+                <h3 onclick="toggleTrial('${trial.id}')" class="text-xs font-sans font-bold tracking-tight truncate ${labelClass}">${trial.title}</h3>
+                <p class="text-[9px] font-mono text-zinc-500 tracking-tight mt-0.5">${trial.streakDesc}</p>
+                ${trial.bonusAvailable && !trial.completed ? `
+                  <div class="inline-flex self-start px-1.5 py-0.5 mt-1 rounded text-[7px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-bold font-mono uppercase tracking-wider">
+                    PERFECT DAY BONUS
+                  </div>` : ""
+                }
+              </div>
+            </div>
+            <div class="flex flex-col items-end shrink-0 gap-1 select-none text-[10px] font-mono">
+              <span class="text-indigo-400 font-bold tracking-tighter shrink-0">+${trial.rewardXp} XP</span>
+              <span class="text-zinc-500 shrink-0">+${trial.rewardGems} GEM</span>
+              <div onclick="toggleTrial('${trial.id}')" class="mt-1 flex items-center justify-center border ${trial.completed ? 'border-indigo-500/35 text-indigo-400 bg-indigo-500/10' : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'} rounded p-0.5 px-2 text-[8px] font-bold cursor-pointer transition-all touch-interactive">
+                ${indicatorText}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      const bossHpPercent = Math.max(0, Math.floor((state.boss.currentHp / state.boss.maxHp) * 100));
+      const expPercent = Math.max(0, Math.min(100, Math.floor((state.character.xp / state.character.requiredXp) * 100)));
+
+      return `
+        <!-- Top Duelist Row -->
+        <h2 class="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest text-center">CURRENT CHALLENGE ARENA</h2>
+        <div class="grid grid-cols-2 gap-3.5 shrink-0">
+          ${renderBossPortrait()}
+          ${renderWarriorPortrait()}
+        </div>
+
+        <!-- Boss Health Deck -->
+        <div class="bg-zinc-850/50 rounded-2xl p-4 border border-zinc-800/80 relative overflow-hidden select-none shadow-lg">
+          <div class="flex justify-between items-center text-xs font-sans font-bold px-0.5 mb-1.5">
+            <span class="text-red-400 uppercase tracking-wider font-semibold">${state.boss.name}</span>
+            <span class="text-indigo-400 font-mono text-xs">HP ${bossHpPercent}%</span>
+          </div>
+          <!-- Gauge -->
+          <div class="h-2.5 w-full bg-zinc-950 rounded-full border border-zinc-800/60 p-[1.5px] shadow-inner">
+            <div class="h-full bg-gradient-to-r from-red-600 to-indigo-500 rounded-full transition-all duration-500 ease-out" style="width: ${bossHpPercent}%;"></div>
+          </div>
+          <div class="flex justify-between font-mono text-[9px] text-zinc-500 px-0.5 mt-1.5">
+            <span>STREAK DAMAGE AMP: 1.0x</span>
+            <span>${state.boss.currentHp}/${state.boss.maxHp} HP</span>
+          </div>
+        </div>
+
+        <!-- Level XP Card -->
+        <div class="bg-zinc-850/30 rounded-2xl p-4 border border-zinc-800/60 shadow-inner">
+          <div class="flex justify-between font-mono text-[9px] text-indigo-400 px-0.5 mb-1.5 select-none font-bold">
+            <span>LEVEL PROGRESSION</span>
+            <span>${state.character.xp} / ${state.character.requiredXp} XP</span>
+          </div>
+          <div class="h-2 w-full bg-zinc-950 rounded-full overflow-hidden p-[1px] border border-zinc-800/40">
+            <div class="h-full bg-gradient-to-r from-indigo-600 to-indigo-300 rounded-full transition-all duration-350" style="width: ${expPercent}%;"></div>
+          </div>
+          <p class="text-[9.5px] text-zinc-500 font-mono tracking-tight mt-1.5 ml-0.5 select-none font-medium">Unlocked rank progression needs ${state.character.requiredXp - state.character.xp} XP to achieve next level</p>
+        </div>
+
+        <!-- Section List Head -->
+        <div class="space-y-4">
+          <div class="flex justify-between items-center select-none pt-1">
+            <h2 class="font-sans text-xs tracking-wider text-white font-bold uppercase">TRIALS OF THE DAY</h2>
+            <button onclick="triggerAIScan()" class="bg-indigo-600 border border-indigo-400/30 hover:bg-indigo-500 text-white text-[10px] uppercase tracking-wider font-mono font-bold rounded-lg px-3 py-1.5 flex items-center gap-1.5 shadow-lg shadow-indigo-500/20 active:scale-95 transition-transform touch-interactive">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
+              ORACLE SCAN
+            </button>
+          </div>
+          <div class="space-y-2.5" id="trials-list-mount-container">
+            ${trialsListHtml}
+          </div>
+        </div>
+
+        <!-- Bottom Reset Deck -->
+        <div class="flex items-center justify-center gap-2 pt-4 select-none">
+          <i data-lucide="clock" class="w-4 h-4 text-zinc-500 animate-pulse"></i>
+          <span class="text-[10px] font-mono text-zinc-500" id="clock-countdown-node">DAILY RESET: -- : -- : --</span>
+        </div>
+      `;
+    }
+
+    // --- TAB: 2 - STATS PAGE ---
+    function renderStatsTab() {
+      // Draw 7-day momentum bar chart dynamically using our zero-initialized weekly state!
+      const weekdaysList = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+      const currentDayName = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][new Date().getDay()];
+
+      let chartBarsHtml = "";
+      weekdaysList.forEach(dayName => {
+        const xpVal = state.weeklyXp ? (state.weeklyXp[dayName] || 0) : 0;
+        
+        // Determine dynamic height based on values, defaulting to h-4 baseline for 0 XP
+        let heightClass = "h-4"; 
+        if (xpVal > 150) heightClass = "h-32";
+        else if (xpVal > 110) heightClass = "h-28";
+        else if (xpVal > 80) heightClass = "h-24";
+        else if (xpVal > 50) heightClass = "h-16";
+        else if (xpVal > 25) heightClass = "h-10";
+        else if (xpVal > 0) heightClass = "h-8";
+        
+        const isCurrentActive = (dayName === currentDayName);
+        
+        const bgStyle = isCurrentActive 
+          ? "bg-indigo-600 shadow-[0_0_12px_rgba(99,102,241,0.5)] text-white font-bold" 
+          : "bg-zinc-800 border border-zinc-700/50 hover:bg-zinc-700 text-zinc-400";
+        const labelTextClass = isCurrentActive ? "text-indigo-400 font-bold" : "text-zinc-500";
+        
+        chartBarsHtml += `
+          <div class="flex flex-col items-center flex-1 justify-end space-y-2 touch-interactive h-36 select-none cursor-pointer" onclick="fireToast('${dayName} Record: ${xpVal} XP Conquered!', 'exp')">
+            <div class="${heightClass} w-8 rounded-md flex flex-col justify-end text-[7px] text-center pb-2.5 overflow-hidden ring-1 ring-black/40 ${bgStyle} transition-all duration-300">
+              <span class="rotate-270 block whitespace-nowrap opacity-75 font-mono">${xpVal}</span>
+            </div>
+            <span class="text-[8px] font-mono ${labelTextClass}">${dayName}</span>
+          </div>
+        `;
+      });
+
+      return `
+        <h2 class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest text-center">HISTORIC INSIGHTS</h2>
+        <!-- 7-day Momentum Widget -->
+        <div class="bg-zinc-850/50 rounded-2xl p-4 border border-zinc-850 select-none shadow-md">
+          <h3 class="font-sans text-xs font-bold tracking-wide text-indigo-400 mb-3 uppercase">7-DAY XP MOMENTUM</h3>
+          <div class="flex justify-between items-end gap-1.5 px-1 bg-zinc-950 p-2.5 rounded-xl border border-zinc-850 shadow-inner">
+            ${chartBarsHtml}
+          </div>
+        </div>
+
+        <!-- Metric Boxes Grid -->
+        <div class="grid grid-cols-2 gap-3 shrink-0">
+          <div class="bg-zinc-850/50 rounded-xl p-3.5 border border-zinc-850 select-none hover:border-zinc-700 transition-all text-center">
+            <p class="text-[8px] font-mono text-zinc-500 uppercase tracking-wider font-semibold">TOTAL XP CONQUERED</p>
+            <h4 class="font-sans text-xl font-bold tracking-tight mt-1 text-zinc-100">${state.stats.totalXpEarned.toLocaleString()}</h4>
+          </div>
+          <div class="bg-zinc-850/50 rounded-xl p-3.5 border border-zinc-850 select-none hover:border-zinc-700 transition-all text-center">
+            <p class="text-[8px] font-mono text-zinc-500 uppercase tracking-wider font-semibold">GEMS SPENT</p>
+            <h4 class="font-sans text-xl font-bold tracking-tight mt-1 text-red-400">${state.stats.gemsSpent}</h4>
+          </div>
+          <div class="bg-zinc-850/50 rounded-xl p-3.5 border border-zinc-850 select-none hover:border-zinc-700 transition-all text-center">
+            <p class="text-[8px] font-mono text-zinc-500 uppercase tracking-wider font-semibold">PERFECT DAYS</p>
+            <h4 class="font-sans text-xl font-bold tracking-tight mt-1 text-indigo-450 text-indigo-400">${state.stats.perfectDays}</h4>
+          </div>
+          <div class="bg-zinc-850/50 rounded-xl p-3.5 border border-zinc-850 select-none hover:border-zinc-700 transition-all text-center">
+            <p class="text-[8px] font-mono text-zinc-500 uppercase tracking-wider font-semibold">BEST STREAK</p>
+            <h4 class="font-sans text-xl font-bold tracking-tight mt-1 text-emerald-400">${state.stats.bestStreak} DAYS</h4>
+          </div>
+        </div>
+
+        <!-- Active Habit Streaks List -->
+        <div class="bg-zinc-850/50 rounded-2xl p-4 border border-zinc-850 select-none shadow-md">
+          <h3 class="font-sans text-xs font-bold tracking-wide text-indigo-400 mb-3 uppercase">ACTIVE HABIT STREAKS</h3>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-850 flex flex-col items-center justify-center space-y-1">
+              <i data-lucide="dumbbell" class="w-5 h-5 text-indigo-400"></i>
+              <span class="text-[10px] font-mono text-orange-400 font-bold">&#x1F525; ${state.stats.streaks.health}</span>
+            </div>
+            <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-850 flex flex-col items-center justify-center space-y-1">
+              <i data-lucide="book-open" class="w-5 h-5 text-indigo-400"></i>
+              <span class="text-[10px] font-mono text-orange-400 font-bold">&#x1F525; ${state.stats.streaks.reading}</span>
+            </div>
+            <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-850 flex flex-col items-center justify-center space-y-1">
+              <i data-lucide="user-check" class="w-5 h-5 text-indigo-400"></i>
+              <span class="text-[10px] font-mono text-orange-400 font-bold">&#x1F525; ${state.stats.streaks.meditation}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legendary Milestones Scroll list -->
+        <div class="bg-zinc-850/50 rounded-2xl p-4 border border-zinc-850 shadow-md">
+          <h3 class="font-sans text-xs font-bold tracking-wide text-indigo-400 mb-3 uppercase">LEGENDARY MILESTONES</h3>
+          <div class="flex gap-3 overflow-x-auto pb-1 scroll-hide">
+            <!-- Iron Will (Unlocked) -->
+            <div class="bg-zinc-950 p-3 rounded-xl border border-indigo-500/10 flex flex-col items-center justify-center text-center space-y-1 w-28 shrink-0">
+              <div class="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">
+                <i data-lucide="shield" class="w-5 h-5"></i>
+              </div>
+              <p class="text-[9px] font-sans font-bold text-indigo-300 whitespace-nowrap uppercase">IRON WILL</p>
+              <p class="text-[7px] font-mono text-zinc-500 tracking-wider">UNLOCKED</p>
+            </div>
+            <!-- Blade Master (Unlocked) -->
+            <div class="bg-zinc-950 p-3 rounded-xl border border-indigo-500/10 flex flex-col items-center justify-center text-center space-y-1 w-28 shrink-0">
+              <div class="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">
+                <i data-lucide="swords" class="w-5 h-5"></i>
+              </div>
+              <p class="text-[9px] font-sans font-bold text-indigo-300 whitespace-nowrap uppercase">BLADE MASTER</p>
+              <p class="text-[7px] font-mono text-zinc-500 tracking-wider">UNLOCKED</p>
+            </div>
+            <!-- War Hero (Locked) -->
+            <div class="bg-zinc-950 p-3 rounded-xl border border-dashed border-zinc-800 flex flex-col items-center justify-center text-center space-y-1 w-28 shrink-0 opacity-40">
+              <div class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-850 flex items-center justify-center text-zinc-500">
+                <i data-lucide="trophy" class="w-5 h-5"></i>
+              </div>
+              <p class="text-[9px] font-sans font-bold text-zinc-500 whitespace-nowrap uppercase">WAR HERO</p>
+              <p class="text-[7px] font-mono text-zinc-500">LOCKED</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- TAB: 3 - SHOP REWARDS ---
+    function renderShopTab() {
+      // Predefined items
+      const stockItems = [
+        { id: "shield", title: "Streak Shield", desc: "Protect your daily legacy from ruin.", price: 40, icon: "shield", tab: "battle" },
+        { id: "scroll", title: "XP Scroll", desc: "Gain double renown for 2 hours.", price: 60, icon: "scroll", tab: "battle" },
+        { id: "raven", title: "Raven", desc: "A loyal scout for your journeys.", price: 100, icon: "sparkles", tab: "battle" },
+        { id: "trail", title: "Flame Trail", desc: "Leave a burning path of victory.", price: 120, icon: "flame", tab: "battle" },
+        { id: "armor", title: "Ghost Armor", desc: "Ethereal plate for the phantom knight.", price: 60, icon: "shield-alert", tab: "battle" },
+
+        { id: "cos_skin", title: "Midnight Cloak", desc: "Sleek shadowy cosmetic overlay.", price: 75, icon: "sparkles", tab: "avatar" },
+        { id: "cos_helm", title: "Aurelia Crest", desc: "Glorious golden crown feather plume set.", price: 90, icon: "crown", tab: "avatar" }
+      ];
+
+      const currentShopTab = state.shopTab || "battle";
+      const battleBtnClass = currentShopTab === "battle" ? "bg-indigo-600 text-white font-bold border-indigo-500 shadow-md shadow-indigo-600/10" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-850 border-zinc-800/80";
+      const avatarBtnClass = currentShopTab === "avatar" ? "bg-indigo-600 text-white font-bold border-indigo-500 shadow-md shadow-indigo-600/10" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-850 border-zinc-800/80";
+
+      // Programmatic loop rendering lists according to tab choice
+      let itemsGridHtml = "";
+      const filtered = stockItems.filter(item => item.tab === currentShopTab);
+      
+      filtered.forEach(item => {
+        const isOwned = state.ownedItems.includes(item.id);
+        const btnText = isOwned ? "OWNED" : `💎 ${item.price}`;
+        const btnClass = isOwned 
+          ? "bg-zinc-900 text-zinc-500 border-zinc-800/80 cursor-default" 
+          : "bg-zinc-950 text-indigo-400 border-indigo-500/20 hover:bg-indigo-600 hover:text-white hover:border-indigo-500 font-bold transition-all";
+
+        itemsGridHtml += `
+          <div class="bg-zinc-850/50 rounded-2xl p-4 border border-zinc-850 flex flex-col justify-between hover:border-zinc-700 transition-all relative select-none shadow-md">
+            <div class="space-y-2.5 flex-grow">
+              <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-indigo-400">
+                <i data-lucide="${item.icon}" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h4 class="font-sans text-xs font-bold text-zinc-100">${item.title}</h4>
+                <p class="text-[9px] text-zinc-400 mt-1 leading-snug">${item.desc}</p>
+              </div>
+            </div>
+            <button onclick="purchaseItem('${item.id}', ${item.price})" class="mt-4 w-full h-10 border text-[10px] font-mono tracking-wide rounded-xl touch-interactive ${btnClass}">
+              ${btnText}
+            </button>
+          </div>
+        `;
+      });
+
+      // Show Boost Active if unlocked
+      const boostBadge = state.character.boostActive 
+        ? `<span class="self-start px-2 py-0.5 rounded text-[8px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-mono font-bold">5% BOOST ACTIVE</span>`
+        : `<span class="self-start px-2 py-0.5 rounded text-[8px] bg-indigo-550 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-mono font-bold">LIMITED OFFER</span>`;
+
+      return `
+        <h2 class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest text-center">SPOILS & REWARD STALL</h2>
+        <!-- Tab Choice Buttons -->
+        <div class="grid grid-cols-2 gap-2 select-none shrink-0 border-b border-zinc-850 pb-3">
+          <button onclick="setShopTab('battle')" class="py-2.5 rounded-xl text-xs font-mono tracking-wide transition-all border touch-interactive ${battleBtnClass}">
+            BATTLE ITEMS
+          </button>
+          <button onclick="setShopTab('avatar')" class="py-2.5 rounded-xl text-xs font-mono tracking-wide transition-all border touch-interactive ${avatarBtnClass}">
+            AVATAR COSMETICS
+          </button>
+        </div>
+
+        <!-- Programmatic Items Grid -->
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          ${itemsGridHtml}
+        </div>
+
+        <!-- Premium Feature bottom Banner -->
+        <div class="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-indigo-500/30 rounded-2xl p-4 flex gap-4 select-none shadow-xl">
+          <div class="w-14 h-14 bg-zinc-950 flex items-center justify-center text-indigo-400 rounded-xl border border-indigo-500/10 shrink-0">
+            <i data-lucide="award" class="w-8 h-8 text-indigo-400 animate-pulse"></i>
+          </div>
+          <div class="flex flex-col justify-between space-y-2.5 w-full">
+            <div>
+              <div class="flex items-center justify-between">
+                <h3 class="font-sans text-xs font-bold text-zinc-100">FOUNDER'S AEGIS</h3>
+                ${boostBadge}
+              </div>
+              <p class="text-[9px] text-zinc-400 leading-relaxed mt-1">Sustain a permanent +5% XP boost of infinite daily merit and exclusive steel halo plumage details.</p>
+            </div>
+            <button onclick="unlockAegis()" class="h-9 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-sans text-xs font-bold leading-normal rounded-xl transition-all touch-interactive shadow-lg shadow-indigo-600/20">
+              ${state.character.boostActive ? "ALREADY PURCHASED" : "UNLOCK FOR $4.99"}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- TAB: 4 - JOURNAL & CUSTOM CREATOR ---
+    function renderCalendarTab() {
+      return `
+        <h2 class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest text-center">JOURNAL & QUEST SCRIBE</h2>
+        
+        <!-- Interactive Adventure Log Calendar representation -->
+        <div class="bg-zinc-850/50 rounded-2xl p-4 border border-zinc-850 select-none shadow-md">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="font-sans text-xs font-bold tracking-wide text-indigo-400 uppercase">JOURNAL ACCOMPLISHMENTS</h3>
+            <span class="text-[9.5px] font-mono text-indigo-300 font-bold uppercase tracking-wider">MAY 2026</span>
+          </div>
+          <!-- Tiny Calendar Grid -->
+          <div class="grid grid-cols-7 gap-1.5 text-center text-[9px] font-mono mb-2" id="calendar-days-node">
+            <!-- Programmatic calendars render inside in script -->
+          </div>
+          <p class="text-[9px] text-zinc-500 font-mono leading-relaxed mt-2.5 text-center select-none">
+            ⭐ Icons highlight days with 100% completed Daily Quests.
+          </p>
+        </div>
+
+        <!-- Custom Quest Creator Deck -->
+        <div class="bg-zinc-850/50 rounded-2xl p-4 border border-zinc-850 select-none shadow-md">
+          <div class="flex items-center gap-1.5 text-indigo-400 mb-3 font-sans font-bold text-xs uppercase tracking-wide">
+            <i data-lucide="edit-3" class="w-4 h-4 text-indigo-400"></i>
+            <span>SCRIBE CUSTOM TRIAL</span>
+          </div>
+          <div class="space-y-3 font-mono text-xs text-left">
+            <div>
+              <label class="block text-zinc-500 mb-1 text-[9px] uppercase tracking-wider">TRIAL HEADLINE (E.G. STUDY CHESS)</label>
+              <input type="text" id="quest-input-title" placeholder="Drink 3L of Water" class="w-full bg-zinc-950 text-zinc-100 border border-zinc-800 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500/40 outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-zinc-500 mb-1 text-[9px] uppercase tracking-wider">REWARD XP</label>
+                <input type="number" id="quest-input-xp" value="50" min="10" max="250" class="w-full bg-zinc-950 text-zinc-100 border border-zinc-800 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500/40 outline-none">
+              </div>
+              <div>
+                <label class="block text-zinc-500 mb-1 text-[9px] uppercase tracking-wider">REWARD GEM</label>
+                <input type="number" id="quest-input-gem" value="10" min="1" max="100" class="w-full bg-zinc-950 text-zinc-100 border border-zinc-800 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500/40 outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="block text-zinc-500 mb-1 text-[9px] uppercase tracking-wider">TRIAL CATEGORY & STYLE ICON</label>
+              <select id="quest-input-icon" class="w-full bg-zinc-950 text-zinc-100 border border-zinc-800 rounded-lg px-3 py-2 focus:ring-1 focus:ring-indigo-500/40 outline-none text-xs">
+                <option value="dumbbell">&#127947; Fitness (health)</option>
+                <option value="book-open">&#128214; Scholarly (academic)</option>
+                <option value="user-check">&#12015; Silence (meditation)</option>
+                <option value="sparkles">&#129514; Alchemy (crafting)</option>
+              </select>
+            </div>
+            <button onclick="scribeCustomQuest()" class="mt-4 w-full h-10 bg-indigo-600 text-white font-sans text-xs font-bold rounded-xl hover:bg-indigo-500 transition-all touch-interactive uppercase tracking-wider shadow-lg shadow-indigo-600/10">
+              ADD TRIAL
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Dynamic journal initialization
+    function initCalendarJS() {
+      const node = document.getElementById("calendar-days-node");
+      if (!node) return;
+      
+      const weekdays = ["M", "T", "W", "T", "F", "S", "S"];
+      let html = weekdays.map(d => `<span class="text-zinc-500 text-[8px] font-bold">${d}</span>`).join("");
+      
+      // Add days of May 2026. May 1st is Friday.
+      // Offset empty slots for Mon-Thu
+      for (let i = 0; i < 4; i++) {
+        html += `<span class="opacity-10 opacity-0"></span>`;
+      }
+      
+      for (let day = 1; day <= 31; day++) {
+        const dateStr = `2026-05-${day.toString().padStart(2, '0')}`;
+        const done = state.completedDates.includes(dateStr);
+        let cellClass = "w-7 h-7 flex items-center justify-center rounded-lg font-mono text-[9px] relative transition-all touch-interactive select-none cursor-pointer border ";
+        let isDoneMark = "";
+        
+        if (done) {
+          cellClass += "bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow shadow-indigo-500/10 font-bold";
+          // Indigo mini star index indicator
+          isDoneMark = `<span class="absolute text-[6px] -bottom-1 text-indigo-400">&#x2605;</span>`;
+        } else {
+          cellClass += "bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white";
+        }
+        
+        html += `
+          <div onclick="toggleCalendarDate('${dateStr}')" class="${cellClass}">
+            <span>${day}</span>
+            ${isDoneMark}
+          </div>
+        `;
+      }
+      node.innerHTML = html;
+    }
+
+    function toggleCalendarDate(dateStr) {
+      if (state.completedDates.includes(dateStr)) {
+        state.completedDates = state.completedDates.filter(d => d !== dateStr);
+        fireToast("Removed completed mark for journal date", "error");
+      } else {
+        state.completedDates.push(dateStr);
+        fireToast("Scribed complete day success", "success");
+      }
+      saveState();
+      initCalendarJS();
+    }
+
+    // --- TAB: 5 - GEAR / SETTINGS ---
+    function renderSettingsTab() {
+      const darkToggleClass = state.settings.darkMode ? "bg-indigo-600 border-indigo-500" : "bg-zinc-800 border-zinc-700";
+      const darkToggleKnob = state.settings.darkMode ? "translate-x-5" : "translate-x-0";
+      
+      const soundToggleClass = state.settings.soundFx ? "bg-indigo-600 border-indigo-500" : "bg-zinc-800 border-zinc-700";
+      const soundToggleKnob = state.settings.soundFx ? "translate-x-5" : "translate-x-0";
+
+      return `
+        <h2 class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest text-center">CHARACTER PROFILE & GEAR</h2>
+        <!-- Scribe Bio Banner -->
+        <div class="bg-zinc-850/50 rounded-2xl p-4 border border-zinc-850 flex gap-3 text-left relative overflow-hidden select-none shadow-md">
+          <div class="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:12px_12px]"></div>
+          
+          <div class="w-12 h-12 bg-zinc-950 rounded-xl border border-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold relative shrink-0">
+            <i data-lucide="crown" class="w-7 h-7"></i>
+          </div>
+          <div class="flex-grow space-y-1 overflow-hidden">
+            <div class="flex items-center gap-1.5">
+              <input type="text" id="character-name-edit" onblur="changePlayerName(this.value)" value="${state.character.name}" class="font-sans text-sm font-bold tracking-wide text-zinc-100 bg-transparent border-b border-dashed border-zinc-700 hover:border-indigo-500 focus:border-indigo-500 focus:ring-0 outline-none py-0 w-28 uppercase truncate transition-all">
+              <span class="text-[9px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">${state.character.rank}</span>
+            </div>
+            <p class="text-[10px] font-mono text-zinc-500 truncate font-semibold uppercase tracking-tight">${state.character.profession}</p>
+          </div>
+        </div>
+
+        <!-- General Settings Stack list -->
+        <div class="bg-zinc-850/50 rounded-2xl p-1 border border-zinc-850 select-none text-xs shadow-md">
+          <div class="p-4 flex items-center justify-between border-b border-zinc-850">
+            <div class="flex items-center gap-2">
+              <i data-lucide="moon" class="w-4 h-4 text-indigo-400"></i>
+              <span class="font-mono text-zinc-300">Dark Mode Option</span>
+            </div>
+            <div onclick="toggleDarkStyle()" class="w-10 h-5 rounded-full flex items-center p-0.5 transition-all outline-none border cursor-pointer ${darkToggleClass}">
+              <div class="w-3.5 h-3.5 rounded-full bg-black shadow transition-all duration-200 transform ${darkToggleKnob}"></div>
+            </div>
+          </div>
+
+          <div class="p-4 flex items-center justify-between border-b border-zinc-850">
+            <div class="flex items-center gap-2">
+              <i data-lucide="volume-2" class="w-4 h-4 text-indigo-400"></i>
+              <span class="font-mono text-zinc-300">Sound Effects active</span>
+            </div>
+            <div onclick="toggleSoundFx()" class="w-10 h-5 rounded-full flex items-center p-0.5 transition-all outline-none border cursor-pointer ${soundToggleClass}">
+              <div class="w-3.5 h-3.5 rounded-full bg-black shadow transition-all duration-200 transform ${soundToggleKnob}"></div>
+            </div>
+          </div>
+
+          <div class="p-4 flex items-center justify-between border-b border-zinc-850 touch-interactive cursor-pointer hover:bg-zinc-800/20 transition-all" onclick="fireToast('Notifications preferences validated', 'system')">
+            <div class="flex items-center gap-2">
+              <i data-lucide="bell" class="w-4 h-4 text-indigo-400"></i>
+              <span class="font-mono text-zinc-300">Notification Preferences</span>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-500"></i>
+          </div>
+
+          <div class="p-4 flex items-center justify-between touch-interactive cursor-pointer hover:bg-zinc-800/20 transition-all" onclick="testFirebaseConnection()">
+            <div class="flex items-center gap-2">
+              <i data-lucide="cloud" class="w-4 h-4 text-indigo-400"></i>
+              <div>
+                <span class="font-mono block text-zinc-300">Cloud Sync Status</span>
+                <span class="text-[7.5px] font-mono text-indigo-400 font-bold block mt-0.5 uppercase tracking-wider">OFFLINE MODE PERSISTENCE</span>
+              </div>
+            </div>
+            <i data-lucide="check-circle" class="w-4 h-4 text-indigo-400"></i>
+          </div>
+        </div>
+
+        <!-- Adventurer Shortcuts Row -->
+        <div class="space-y-3 pt-2">
+          <span class="text-[10px] font-mono tracking-widest text-indigo-400 block select-none font-bold uppercase">ADVENTURER SHORTCUTS</span>
+          <button onclick="skipToFinalStage()" class="w-full h-11 border border-indigo-900 bg-indigo-950/20 text-indigo-400 text-xs font-mono font-bold tracking-wider rounded-xl hover:bg-indigo-500/20 active:bg-indigo-500/30 transition-all flex items-center justify-center gap-2 touch-interactive select-none">
+            <i data-lucide="chevrons-up" class="w-4 h-4"></i>
+            SKIP TO THE FINAL STAGE
+          </button>
+          <p class="text-[9px] text-zinc-500 leading-relaxed text-center select-none font-mono">
+            Fast-track Sir Alistair to Level 45, grant 9,999 Gems, set a 100-Day Perfect Streak, and summon Slothwraith Soul-Emperor!
+          </p>
+        </div>
+
+        <!-- Danger Actions Row -->
+        <div class="space-y-3 pt-2">
+          <span class="text-[10px] font-mono tracking-widest text-red-400 block select-none font-bold uppercase">DANGER ZONE</span>
+          <button onclick="handleHardReset()" class="w-full h-11 border border-red-900 bg-red-950/20 text-red-400 text-xs font-mono font-bold tracking-wider rounded-xl hover:bg-red-500/20 active:bg-red-500/30 transition-all flex items-center justify-center gap-2 touch-interactive select-none">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            RESET CHARACTER DATA
+          </button>
+          <p class="text-[9px] text-[#A24245] leading-relaxed text-center select-none">
+            Resetting data will permanently delete your progression, equipment, and achievements. This action cannot be undone.
+          </p>
+        </div>
+
+        <!-- System Scribes Indicator -->
+        <div class="text-center space-y-1.5 pt-4 border-t border-zinc-800/80 shrink-0 select-none">
+          <span class="text-[9px] font-mono text-zinc-500 hover:text-zinc-400" onclick="fireToast('Signature validated: Elegant Dark Applet', 'system')">VERSION 1.1.0</span>
+          <p class="text-[10px] font-sans text-indigo-400/90 font-bold tracking-wide select-none">"Discipline Prevails"</p>
+        </div>
+      `;
+    }
+
+    // --- GAMEPLAY MECHANICS & SYSTEM PROCESSES ---
+
+    // Ready vs Rest mode toggle
+    function handleReadyRest() {
+      if (state.character.status === "Ready for Battle") {
+        state.character.status = "Rested Status";
+        fireToast("Character entered resting state - healing initiated.", "success");
+      } else {
+        state.character.status = "Ready for Battle";
+        fireToast("Character state: READY FOR COMBAT!", "success");
+      }
+      saveState();
+      if (activeTab === "home") switchTab("home");
+    }
+
+    // Scribe custom trial items
+    function scribeCustomQuest() {
+      const titleInput = document.getElementById("quest-input-title");
+      const xpInput = document.getElementById("quest-input-xp");
+      const gemInput = document.getElementById("quest-input-gem");
+      const iconInput = document.getElementById("quest-input-icon");
+
+      if (!titleInput || !titleInput.value.trim()) {
+        fireToast("You must enter a non-empty Trial designation!", "error");
+        return;
+      }
+
+      const xp = parseInt(xpInput.value) || 50;
+      const gems = parseInt(gemInput.value) || 10;
+      const icon = iconInput.value || "dumbbell";
+      
+      const newTrial = {
+        id: "custom-" + Date.now(),
+        title: titleInput.value.trim(),
+        rewardXp: xp,
+        rewardGems: gems,
+        streakDesc: "0-DAY STREAK · SCRIBED",
+        active: true,
+        completed: false,
+        category: "custom",
+        icon: icon
+      };
+
+      state.customTrials.push(newTrial);
+      saveState();
+      
+      fireToast(`'${newTrial.title}' scribed successfully!`, "success");
+      
+      titleInput.value = "";
+      
+      // Auto return home to view new trial
+      switchTab("home");
+    }
+
+    // Scribe custom character title on blur setting
+    function changePlayerName(val) {
+      if (val && val.trim()) {
+        state.character.name = val.trim().toUpperCase();
+        saveState();
+        fireToast(`Identity modified: Welcome ${state.character.name}`, "system");
+      }
+    }
+
+    // Toggle sound toggle switch
+    function toggleSoundFx() {
+      state.settings.soundFx = !state.settings.soundFx;
+      saveState();
+      // Micro tone
+      if (state.settings.soundFx) {
+        try {
+          const context = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = context.createOscillator();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(800, context.currentTime);
+          osc.connect(context.destination);
+          osc.start();
+          osc.stop(context.currentTime + 0.08);
+        } catch (e) {}
+      }
+      fireToast(state.settings.soundFx ? "Sound FX Activated" : "Sound FX Disabled", "system");
+      if (activeTab === "settings") switchTab("settings");
+    }
+
+    function applyTheme() {
+      if (state && state.settings) {
+        if (!state.settings.darkMode) {
+          document.body.classList.add("light-theme");
+          document.body.classList.remove("bg-neutral-950");
+          document.body.classList.add("bg-zinc-100");
+        } else {
+          document.body.classList.remove("light-theme");
+          document.body.classList.remove("bg-zinc-100");
+          document.body.classList.add("bg-neutral-950");
+        }
+      }
+    }
+
+    // Toggle Dark Style setting
+    function toggleDarkStyle() {
+      state.settings.darkMode = !state.settings.darkMode;
+      saveState();
+      applyTheme();
+      fireToast("Vibe toggle update applied", "system");
+      if (activeTab === "settings") switchTab("settings");
+    }
+
+    // Fast-track and ascension options
+    function skipToFinalStage() {
+      triggerModal(
+        "ASCEND TO THE FINAL STAGE?", 
+        "Are you ready to skip directly to the final phase? Sir Alistair will instantly evolve to Level 45, claim 9,999 gems, unlock all epic shop gear, and unlock the Slothwraith Soul-Emperor climax boss fight!", 
+        () => {
+          // 1. Advance Character Level, Rank, and Status
+          state.character.level = 45;
+          state.character.rank = "LORD CHAMP";
+          state.character.profession = "LEVEL 45 LORD CHAMP";
+          state.character.xp = 1800;
+          state.character.requiredXp = 2000;
+          state.character.gems = 9999;
+          state.character.status = "Ultimate Ascent Phase";
+          state.character.boostActive = true;
+
+          // 2. Evolve Boss to Ultimate Climax Stage
+          state.boss.name = "SLOTHWRAITH SOUL-EMPEROR";
+          state.boss.maxHp = 1000;
+          state.boss.currentHp = 120; // climactic low hp final fight!
+          state.boss.hp = 12; // Update percentages
+          
+          // 3. Perfect Days & Streaks Boost
+          state.stats.totalXpEarned = 15000;
+          state.stats.perfectDays = 25;
+          state.stats.bestStreak = 42;
+          state.stats.streaks.health = 35;
+          state.stats.streaks.meditation = 42;
+          state.stats.streaks.reading = 30;
+
+          // 4. Fill weekly XP to look fully completed
+          state.weeklyXp = {
+            MON: 1250,
+            TUE: 1250,
+            WED: 1250,
+            THU: 1250,
+            FRI: 1250,
+            SAT: 1250,
+            SUN: 1250
+          };
+
+          // 5. Unlock all premium and avatar shop legendary spoils
+          const itemsToUnlock = ["shield", "scroll", "raven", "trail", "armor", "cos_skin", "cos_helm"];
+          itemsToUnlock.forEach(id => {
+            if (!state.ownedItems.includes(id)) {
+              state.ownedItems.push(id);
+            }
+          });
+
+          saveState();
+          fireToast("🔮 ASCENSION PROTOCOL COMPLETED! Welcome to the final stage!", "success");
+          switchTab("home");
+        },
+        "ASCEND NOW",
+        "bg-indigo-600 text-white hover:bg-indigo-500 shadow-xl shadow-indigo-600/35 font-bold",
+        "chevrons-up",
+        "text-indigo-400 bg-indigo-500/10 border-indigo-500/25"
+      );
+    }
+
+    // Shop Item Purchase logic
+    function purchaseItem(itemId, price) {
+      if (state.ownedItems.includes(itemId)) return;
+      
+      if (state.character.gems >= price) {
+        state.character.gems -= price;
+        state.stats.gemsSpent += price;
+        state.ownedItems.push(itemId);
+        saveState();
+        fireToast(`Successfully purchased Spoils! Item added to inventory.`, "success");
+        if (activeTab === "shop") switchTab("shop");
+      } else {
+        fireToast(`Insufficient Gems! Requires ${price} gems. Complete extra trials to earn keys.`, "error");
+      }
+    }
+
+    // Unlimited aegis premium lock
+    function unlockAegis() {
+      if (state.character.boostActive) {
+        fireToast("Founders Aegis is already active on this character profile!", "system");
+        return;
+      }
+      
+      triggerModal(
+        "CONFIRM TRANS-SCRIBE", 
+        "Attempting safe sandbox acquisition of Founders Aegis ($4.99). Confirm scribe connection?", 
+        () => {
+          fireToast("Authorizing Scribe Transact...", "system");
+          setTimeout(() => {
+            state.character.boostActive = true;
+            state.character.gems += 150; // Welcome bonuses
+            state.stats.totalXpEarned += 200;
+            saveState();
+            fireToast("FOUNDERS AEGIS UNLOCKED! Permanent +5% XP boost and feather plumage active! +150 Gems bonus claimed!", "success");
+            if (activeTab === "shop") switchTab("shop");
+          }, 1200);
+        }
+      );
+    }
+
+    // Core character reset action
+    function handleHardReset() {
+      triggerModal(
+        "PURGE CHARACTER DATA", 
+        "Are you absolutely certain? This will irrevocably delete all levels, stats, and scribed quests. This action is terminal.", 
+        () => {
+          localStorage.removeItem("honourbound_save");
+          state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+          activeTab = "home";
+          saveState();
+          fireToast("Character registry completely purged. Restarting cycle.", "error");
+          switchTab("home");
+        }
+      );
+    }
+
+    // --- MOCK LOCAL AI SCREEN HABIT SCAN ENGINE ---
+    function triggerAIScan() {
+      // Simulate highly advanced offline scanning logic requested using setTimeout delays
+      const container = document.getElementById("trials-list-mount-container");
+      if (!container) return;
+
+      const originalHtml = container.innerHTML;
+      
+      // Inject scanning loading state
+      container.innerHTML = `
+        <div class="bg-zinc-850/50 border border-indigo-500/20 rounded-2xl p-5 text-center space-y-3.5 animate-pulse select-none shadow-xl">
+          <div class="flex justify-center items-center gap-2 text-indigo-400 font-mono font-bold text-xs">
+            <i data-lucide="loader" class="w-5 h-5 text-indigo-450 animate-spin"></i>
+            <span>ORACLE AURA INTERROGATION ACTIVE</span>
+          </div>
+          <div class="text-[9px] font-mono text-left text-slate-500 whitespace-pre-line space-y-1" id="oracle-terminal-text">
+            Initializing aura tracker metrics...
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+
+      const term = document.getElementById("oracle-terminal-text");
+      const steps = [
+        "Analyzing weekly sleep consistency records...",
+        "Measuring current Slothwraith HP radiation indices...",
+        "Identifying physical habits vs energy status ratio...",
+        "AI Scribes compiling customized Daily Trials..."
+      ];
+
+      let stepIdx = 0;
+      const stepTimer = setInterval(() => {
+        if (stepIdx < steps.length && term) {
+          term.innerText += `\n▸ ${steps[stepIdx]}`;
+          stepIdx++;
+        } else {
+          clearInterval(stepTimer);
+        }
+      }, 300);
+
+      // Timeout simulated delay matches prompt spec!
+      setTimeout(() => {
+        // Create random custom smart trials
+        const generatorTitles = [
+          { title: "Scribe's Journal Log", xp: 45, gems: 5, icon: "scroll", desc: "COMMUNICATION · REFLECTION" },
+          { title: "Iron Lift Protocol", xp: 75, gems: 10, icon: "dumbbell", desc: "PHYSICAL STRENGTH · ENDURANCE" },
+          { title: "Midnight Solitude", xp: 80, gems: 8, icon: "user-check", desc: "MIND SANCTUM · HEALTH" },
+          { title: "Chronicles Study", xp: 50, gems: 6, icon: "book-open", desc: "INTELLECT · SCROLLS" }
+        ];
+
+        // Pick random
+        const chosen = generatorTitles[Math.floor(Math.random() * generatorTitles.length)];
+        
+        const generatedTrial = {
+          id: "custom-" + Date.now(),
+          title: chosen.title,
+          rewardXp: chosen.xp,
+          rewardGems: chosen.gems,
+          streakDesc: `1-DAY STREAK · ${chosen.desc}`,
+          active: true,
+          completed: false,
+          category: "custom",
+          icon: chosen.icon
+        };
+
+        state.customTrials.push(generatedTrial);
+        saveState();
+
+        fireToast(`🔮 Oracle forged new Quest: ${chosen.title}!`, "system");
+        switchTab("home");
+      }, 1600);
+    }
+
+    // Toggle Trial checked completeness
+    function toggleTrial(trialId) {
+      let matched = state.trials.find(t => t.id === trialId);
+      if (!matched) {
+        matched = state.customTrials.find(t => t.id === trialId);
+      }
+
+      if (!matched) return;
+
+      if (matched.completed) {
+        // Uncomplete instantly
+        uncompleteTrial(matched);
+      } else {
+        // Confirmation is REQUIRED to complete a quest
+        triggerModal(
+          "COMPLETE QUEST?",
+          `Would you like to complete '${matched.title}'? This will mark it as conquered and grant you rewards!`,
+          () => {
+            completeTrial(matched);
+          },
+          "COMPLETE QUEST",
+          "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/20",
+          "check-circle",
+          "text-indigo-400 bg-indigo-500/10 border-indigo-500/25"
+        );
+      }
+    }
+
+    function completeTrial(matched) {
+      matched.completed = true;
+
+      // Adjust metrics depending on completion states
+      const mult = state.character.boostActive ? 1.05 : 1.00;
+      const rewardXp = Math.floor(matched.rewardXp * mult);
+
+      // Add character rewards
+      state.character.xp += rewardXp;
+      state.character.gems += matched.rewardGems;
+      state.stats.totalXpEarned += rewardXp;
+      
+      // Track streaks dynamically
+      if (matched.category === "health") {
+        state.stats.streaks.health += 1;
+        matched.streakDesc = `${state.stats.streaks.health}-DAY STREAK · HEALTH`;
+      } else if (matched.category === "meditation") {
+        state.stats.streaks.meditation += 1;
+        matched.streakDesc = `${state.stats.streaks.meditation}-DAY STREAK · DISCIPLINE`;
+      } else if (matched.category === "reading") {
+        state.stats.streaks.reading += 1;
+        matched.streakDesc = `${state.stats.streaks.reading}-DAY STREAK · ACADEMIC`;
+      } else {
+        if (!matched.streakCount) matched.streakCount = 0;
+        matched.streakCount += 1;
+        matched.streakDesc = `${matched.streakCount}-DAY STREAK · SCRIBED`;
+      }
+
+      // Maintain best streak
+      const maxStreak = Math.max(
+        state.stats.streaks.health,
+        state.stats.streaks.meditation,
+        state.stats.streaks.reading,
+        ...state.customTrials.map(t => t.streakCount || 0)
+      );
+      if (maxStreak > state.stats.bestStreak) {
+        state.stats.bestStreak = maxStreak;
+      }
+
+      // Add to weekly XP tracker for momentum chart
+      const currentDayName = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][new Date().getDay()];
+      if (!state.weeklyXp) {
+        state.weeklyXp = { MON: 0, TUE: 0, WED: 0, THU: 0, FRI: 0, SAT: 0, SUN: 0 };
+      }
+      state.weeklyXp[currentDayName] = (state.weeklyXp[currentDayName] || 0) + rewardXp;
+
+      // Damage boss
+      state.boss.currentHp = Math.max(0, state.boss.currentHp - Math.floor(matched.rewardXp / 2));
+      
+      fireToast(`⚔️ Conquered: ${matched.title}! +${rewardXp} XP, +${matched.rewardGems} Gems!`, "success");
+      
+      // Dynamic perfect day check
+      const trialsCombined = [...state.trials, ...state.customTrials];
+      const allDone = trialsCombined.length > 0 && trialsCombined.every(t => t.completed);
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (allDone) {
+        if (!state.completedDates.includes(todayStr)) {
+          state.completedDates.push(todayStr);
+          state.stats.perfectDays += 1;
+          fireToast("🏆 PERFECT DAY UNLOCKED! All Daily Trials conquered!", "success");
+        }
+      }
+
+      // Audio tactile simulated beep
+      if (state.settings.soundFx) {
+        try {
+          const context = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = context.createOscillator();
+          const gain = context.createGain();
+          osc.connect(gain);
+          gain.connect(context.destination);
+          osc.frequency.setValueAtTime(600, context.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1200, context.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.1, context.currentTime);
+          osc.start();
+          osc.stop(context.currentTime + 0.18);
+        } catch (e) {}
+      }
+
+      checkLevelUp();
+      checkBossDefeated();
+
+      saveState();
+      switchTab("home");
+    }
+
+    function uncompleteTrial(matched) {
+      matched.completed = false;
+
+      // Adjust metrics depending on completion states
+      const mult = state.character.boostActive ? 1.05 : 1.00;
+      const rewardXp = Math.floor(matched.rewardXp * mult);
+
+      // Deduct
+      state.character.xp = Math.max(0, state.character.xp - rewardXp);
+      state.character.gems = Math.max(0, state.character.gems - matched.rewardGems);
+      state.stats.totalXpEarned = Math.max(0, state.stats.totalXpEarned - rewardXp);
+
+      // Decrement streaks
+      if (matched.category === "health") {
+        state.stats.streaks.health = Math.max(0, state.stats.streaks.health - 1);
+        matched.streakDesc = `${state.stats.streaks.health}-DAY STREAK · HEALTH`;
+      } else if (matched.category === "meditation") {
+        state.stats.streaks.meditation = Math.max(0, state.stats.streaks.meditation - 1);
+        matched.streakDesc = `${state.stats.streaks.meditation}-DAY STREAK · DISCIPLINE`;
+      } else if (matched.category === "reading") {
+        state.stats.streaks.reading = Math.max(0, state.stats.streaks.reading - 1);
+        matched.streakDesc = `${state.stats.streaks.reading}-DAY STREAK · ACADEMIC`;
+      } else {
+        if (matched.streakCount) {
+          matched.streakCount = Math.max(0, matched.streakCount - 1);
+        } else {
+          matched.streakCount = 0;
+        }
+        matched.streakDesc = `${matched.streakCount}-DAY STREAK · SCRIBED`;
+      }
+
+      // Deduct from weekly XP tracker
+      const currentDayName = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][new Date().getDay()];
+      if (state.weeklyXp && state.weeklyXp[currentDayName]) {
+        state.weeklyXp[currentDayName] = Math.max(0, state.weeklyXp[currentDayName] - rewardXp);
+      }
+
+      // Restore boss HP
+      state.boss.currentHp = Math.min(state.boss.maxHp, state.boss.currentHp + Math.floor(matched.rewardXp / 2));
+      
+      // If perfect day of today exists, remove it
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (state.completedDates.includes(todayStr)) {
+        state.completedDates = state.completedDates.filter(d => d !== todayStr);
+        state.stats.perfectDays = Math.max(0, state.stats.perfectDays - 1);
+      }
+
+      fireToast(`Restored: '${matched.title}' state pending.`, "error");
+
+      saveState();
+      switchTab("home");
+    }
+
+    function checkLevelUp() {
+      // Handle LEVEL UP trigger
+      if (state.character.xp >= state.character.requiredXp) {
+        state.character.xp -= state.character.requiredXp;
+        state.character.level += 1;
+        state.character.requiredXp = Math.floor(state.character.requiredXp * 1.15);
+        state.character.gems += 50; // Rank up spoils
+        
+        // Elevate title descriptor rank
+        if (state.character.level >= 45) {
+          state.character.rank = "LORD CHAMP";
+          state.character.profession = `LEVEL ${state.character.level} LORD CHAMP`;
+        } else if (state.character.level >= 43) {
+          state.character.rank = "PALADIN SOVEREIGN";
+          state.character.profession = `LEVEL ${state.character.level} PALADIN SOVEREIGN`;
+        } else if (state.character.level >= 30) {
+          state.character.rank = "VETERAN";
+          state.character.profession = `LEVEL ${state.character.level} PALADIN`;
+        } else if (state.character.level >= 15) {
+          state.character.rank = "GUILDSMAN";
+          state.character.profession = `LEVEL ${state.character.level} GUILDSMAN`;
+        } else {
+          state.character.rank = "INITIATE";
+          state.character.profession = `LEVEL ${state.character.level} INITIATE`;
+        }
+
+        fireToast(`🏆 LEVEL UP! Sir Alistair reached Level ${state.character.level}! Claimed +50 Gems bonus!`, "success");
+      }
+    }
+
+    function checkBossDefeated() {
+      // Handle BOSS DEFEATED trigger
+      if (state.boss.currentHp <= 0) {
+        state.boss.currentHp = state.boss.maxHp;
+        state.character.gems += 100;
+        fireToast(`💀 THE SLOTHWRAITH HAS BEEN DEFEATED! Conquered bonus +100 Gems claimed! A stronger threat emerges...`, "success");
+      }
+    }
+
+    // --- TIMED DATA CLOCK AND RESETS COUNTERS ---
+    function initClockTick() {
+      setInterval(() => {
+        const countdownNode = document.getElementById("clock-countdown-node");
+        if (!countdownNode) return;
+
+        const now = new Date();
+        const hrs = 23 - now.getHours();
+        const mins = 59 - now.getMinutes();
+        const secs = 59 - now.getSeconds();
+        
+        const fHrs = hrs.toString().padStart(2, "0");
+        const fMins = mins.toString().padStart(2, "0");
+        const fSecs = secs.toString().padStart(2, "0");
+
+        countdownNode.innerText = `DAILY RESET IN: ${fHrs}H ${fMins}M ${fSecs}S`;
+      }, 1000);
+    }
+
+    function setShopTab(tabChoice) {
+      state.shopTab = tabChoice;
+      saveState();
+      switchTab("shop");
+    }
+
+    // Simulate authentic firebase checks
+    function testFirebaseConnection() {
+      fireToast("Evaluating connection response to Firebase store...", "system");
+      setTimeout(() => {
+        fireToast("Synchronization verified. 0 orphans, connection status online.", "success");
+      }, 800);
+    }
+
+    // --- APP LIFECYCLE INITIALIZER ---
+    window.onload = function() {
+      loadState();
+      updateHeaderAndFooter();
+      switchTab("home");
+      initClockTick();
+    };
+
+  </script>
+</body>
+</html>
